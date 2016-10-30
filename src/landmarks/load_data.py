@@ -31,7 +31,7 @@ def load(filename, columns=None, random_state=42):
 	
 	# build y 
 	y = data[data.columns[:-1]].values
-	y = (y - 48) / 48 # scale coordinates = [0,1]
+	y = (y - 48) / 48 # scale coordinates = [-1,1]
 
 	# shuffle data
 	X, y = shuffle(X, y, random_state=random_state)
