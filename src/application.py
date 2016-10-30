@@ -1,6 +1,13 @@
-from landmarks.load_data import load
+from faces.face_detector import FaceDetector
+import cv2 
 
+cap = cv2.VideoCapture(0)
 
-X, y = load("data/landmarks/training.csv")
-print "Shape of X:", X.shape
-print "Shape of y:", y.shape
+fd = FaceDetector("data/faces/haarcascade_frontalface.xml", cap)
+
+while fd.step():
+	continue
+
+cap.release()
+cv2.destroyAllWindows()
+
