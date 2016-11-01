@@ -3,9 +3,9 @@ import cv2
 
 cap = cv2.VideoCapture(0)
 
-fd = FaceDetector("data/faces/haarcascade_frontalface.xml", cap)
+fd = FaceDetector("model/faces/haarcascade_frontalface.xml", cap)
 
-while fd.step():
+while fd.detectFace():
 	continue
 
 cap.release()
