@@ -10,7 +10,7 @@ class FaceDetector():
 		self.tickFrequency = cv2.getTickFrequency
 		self.scale = 1
 		self.foundFace = False
-		self.resizedWidth = 320
+		self.resizedWidth = 1200
 		self.trackedFace = None
 		self.trackedFaceROI = None
 		self.templateMatchingDuration = 2
@@ -38,8 +38,20 @@ class FaceDetector():
 			return False
 		return True
 
+	def limit(self, val, inf, sup):
+		return max(inf,min(val,sup))
+
+	def limit_rect(self, rect, img):
+		(x,y,w,h) = rect
+		(img_width, img_height) = img.shape
+		limited_x = self.limit(x, 0, img_height)
+		limited_y = self.limit(y, 0, img_width)
+		limited_width = self.limit(w, 0, img_width-x)
+		limited_height = self.limit(h, 0, img_height-y)
+		return (limited_x, limited_y, limited_width, limited_height)
+
 	def area(self, face):
-		return (face[2]-face[0])*(face[3]-face[1])
+		return (face[2])*(face[3])
 
 	def largestFace(self, faces):
 		if len(faces) == 0:
@@ -51,37 +63,28 @@ class FaceDetector():
 		print largest
 		return largest
 
-	def getFaceTemplate(self, face):
-		face[0] += 0.25 * face[2] 
-		face[1] += 0.25 * face[3]
-		face[2] *= 0.5
-		face[3] *= 0.5
-		return face
+	def getFaceTemplate(self, face, img):
+		(x, y, w, h) = face
+		x = int(x + w/4) 
+		y = int(y + h/4)
+		w = int(w/2)
+		h = int(h/2)
+		template = img[y:y+h, x:x+h]
+		return template
 
-	def getROI(self, face, frame):
-		frameShape = frame.shape
-		width = 2 * face[2]
-		height = 2 * face[3]
-		
-		x = face[0] - 0.5 * face[2]
-		y = face[1] - 0.5 * face[3]
-
-		if x < 0:
-			width += x
-			x = 0
-		if y < 0:
-			height += y
-			y = 0
-		if x + width > frameShape[0]:
-			width = frameShape[0] - x
-		if y + height > frameShape[1]:
-			height = frameShape[1] - y
-
-		return frame[y:y+height, x:x+width]
+	def getROI(self, face, img):
+		(x, y, w, h) = face
+		roi = (int(x - w/2), int(y - h/2), int(w * 2), int(h * 2))
+		(roi_x, roi_y, roi_w, roi_h) = self.limit_rect(roi, img) 
+		return img[roi_y:roi_y+roi_h, roi_x:roi_x+roi_h]
 
 	def detectCascade(self, img, roi_only=False):
 		width = img.shape[0]
-		faces = self.faceCascade.detectMultiScale(img, 
+		if roi_only:
+			search_area = self.trackedFaceROI
+		else:
+			search_area = img
+		faces = self.faceCascade.detectMultiScale(search_area, 
 			scaleFactor = self.cascadeScaleFactor,
 			minNeighbors = self.cascadeMinNeighbors,
 			minSize = (int(width*self.minimumFaceSize), int(width*self.minimumFaceSize)), 
@@ -89,12 +92,13 @@ class FaceDetector():
 
 		if len(faces) == 0: 
 			self.foundFace = False
+			self.trackedFace = None;
 			return
 
 		self.foundFace=True
 		# track only the largest face 
 		self.trackedFace = self.largestFace(faces)
-		self.trackedFaceTemplate = self.getFaceTemplate(self.trackedFace)
+		self.trackedFaceTemplate = self.getFaceTemplate(self.trackedFace, img)
 		self.trackedFaceROI = self.getROI(self.trackedFace, img)
 
 	def detectTemplateMatching(self, frame):
@@ -113,7 +117,7 @@ class FaceDetector():
 		bottom_right = (top_left[0] + width, top_left[1] + height)
 		self.trackedFace = cv2.rectangle(top_left, bottom_right, 255, 2)
 		self.trackedFaceTemplate = self.getFaceTemplate(self.trackedFace)
-		self.trackedFaceROI = self.getROI(self.trackedFace, frame)
+		self.trackedFaceROI = self.getROI(self.trackedFace)
 
 
 	def resize(self, img):
@@ -127,18 +131,25 @@ class FaceDetector():
 		# reescaling if necessary, mantaining aspect ratio
 		if img.shape[1] != self.resizedWidth:
 			img = self.resize(img)
+		# getting only gray scale components
+		gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+
+		color = (0,0,255)
 		if not self.foundFace:
-			self.detectCascade(img, roi_only=False) # detect on whole image (using haar cascades)
+			self.detectCascade(gray_img, roi_only=False) # detect on whole image (using haar cascades)
+			color = (0,0,255)
 		else:
-			self.detectCascade(img, roi_only=True) # detect on ROI (using haar cascades)
-			if self.isTemplateMatchingRunning:
-				self.detectTemplateMatching(img) # detect using template matching
+			color = (0,255,0)
+			self.detectCascade(gray_img, roi_only=True) # detect on ROI (using haar cascades)
+			# if self.isTemplateMatchingRunning:
+			# 	self.detectTemplateMatching(img) # detect using template matching
 		if self.trackedFace is not None:
-			cv2.rectangle(img, 
+			if (color[1] != 0):
+				cv2.rectangle(img, 
 				(self.trackedFace[0], self.trackedFace[1]), 
 				(self.trackedFace[0]+self.trackedFace[2], self.trackedFace[1]+self.trackedFace[3]), 
-				(0,0,255), 2)
+				color, 2)
 		cv2.imshow('img', img)
 		k = cv2.waitKey(30) & 0xff
 		if k == 27:
