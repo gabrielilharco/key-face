@@ -1,4 +1,5 @@
 import cv2
+import settings
 
 class FaceDetector():
 	def __init__(self, haarCascadeFilePath, videoCapture):
@@ -7,20 +8,12 @@ class FaceDetector():
 		except:
 			raise Exception("Error creating haar cascade classifier. Are you sure file " + haarCascadeFilePath + " exists?")
 		self.videoCapture = videoCapture
-		self.tickFrequency = cv2.getTickFrequency
-		self.scale = 1
 		self.foundFace = False
-		self.resizedWidth = 960
 		self.trackedFace = None
 		self.trackedFaceROI = None
-		self.templateMatchingDuration = 1
 		self.templateMatchingStartTime = cv2.getTickCount()
 		self.templateMatchingCurrentTime = cv2.getTickCount()
 		self.isTemplateMatchingRunning = False
-		self.cascadeScaleFactor = 1.1
-		self.cascadeMinNeighbors = 7
-		self.maximumFaceSize = 0.75
-		self.minimumFaceSize = 0.25
 
 	def limit(self, val, inf, sup):
 		return max(inf,min(val,sup))
@@ -63,10 +56,10 @@ class FaceDetector():
 		
 		width = searchArea.shape[0]
 		faces = self.faceCascade.detectMultiScale(searchArea, 
-			scaleFactor = self.cascadeScaleFactor,
-			minNeighbors = self.cascadeMinNeighbors,
-			minSize = (int(width*self.minimumFaceSize), int(width*self.minimumFaceSize)), 
-			maxSize = (int(width*self.maximumFaceSize), int(width*self.maximumFaceSize))) 
+			scaleFactor = settings.cascadeScaleFactor,
+			minNeighbors = settings.cascadeMinNeighbors,
+			minSize = (int(width*settings.minimumFaceSize), int(width*settings.minimumFaceSize)), 
+			maxSize = (int(width*settings.maximumFaceSize), int(width*settings.maximumFaceSize))) 
 
 		if len(faces) == 0: 
 			if roiOnly and not self.isTemplateMatchingRunning:
@@ -90,7 +83,7 @@ class FaceDetector():
 	def detectTemplateMatching(self, img):
 		self.templateMatchingCurrentTime = cv2.getTickCount()
 		duration = (self.templateMatchingCurrentTime - self.templateMatchingStartTime)/cv2.getTickFrequency()
-		if duration > self.templateMatchingDuration or self.trackedFaceTemplate[2] == 0 or self.trackedFaceTemplate[3] == 0:
+		if duration > settings.templateMatchingDuration or self.trackedFaceTemplate[2] == 0 or self.trackedFaceTemplate[3] == 0:
 			self.foundFace = False
 			self.isTemplateMatchingRunning = False
 			return
@@ -115,13 +108,13 @@ class FaceDetector():
 	def resize(self, img):
 		original_height = img.shape[0]
 		original_width = img.shape[1]
-		self.scale = float(min(self.resizedWidth, original_width)) / original_width
+		self.scale = float(min(settings.resizedWidth, original_width)) / original_width
 		return cv2.resize(img, (int(self.scale*original_width), int(self.scale*original_height)))
 
 	def detectFace(self):
 		ret, img = self.videoCapture.read()
 		# reescaling if necessary, mantaining aspect ratio
-		if img.shape[1] != self.resizedWidth:
+		if img.shape[1] != settings.resizedWidth:
 			img = self.resize(img)
 		# getting only gray scale components
 		gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
