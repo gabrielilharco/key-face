@@ -18,7 +18,7 @@ class FaceDetector():
 		self.templateMatchingCurrentTime = cv2.getTickCount()
 		self.isTemplateMatchingRunning = False
 		self.cascadeScaleFactor = 1.1
-		self.cascadeMinNeighbors = 4
+		self.cascadeMinNeighbors = 7
 		self.maximumFaceSize = 0.75
 		self.minimumFaceSize = 0.25
 
@@ -46,23 +46,13 @@ class FaceDetector():
 				largest = face
 		return largest
 
-	def getFaceTemplate(self, face, img):
-		(x, y, w, h) = face
-		template = (int(x + w/4), int(y + h/4), int(w/2), int(h/2))
-		return self.limit_rect(template, img)
-
 	def getSubRect(self, img, rect):
 		(x, y, w, h) = rect
 		return img[y:y+h, x:x+w]
 
-	def getROI(self, face, img):
-		(x, y, w, h) = face
-		roi = (int(x - w/4), int(y - h/4), int(w * 1.5), int(h * 1.5))
-		return self.limit_rect(roi, img)
-	
-	def doubleFace(self, face, img):
-		(x, y, w, h) = face
-		roi = (int(x - w/2), int(y - h/2), int(w * 2), int(h * 2))
+	def scaleRect(self, rect, img, factor):
+		(x, y, w, h) = rect
+		roi = (int(x+w*(1-factor)/2), int(y+h*(1-factor)/2), int(w*factor), int (h*factor))
 		return self.limit_rect(roi, img)
 
 	def detectCascade(self, img, roiOnly=False):
@@ -94,8 +84,8 @@ class FaceDetector():
 		if roiOnly:
 			self.trackedFace[0] += self.trackedFaceROI[0]
 			self.trackedFace[1] += self.trackedFaceROI[1]
-		self.trackedFaceTemplate = self.getFaceTemplate(self.trackedFace, img)
-		self.trackedFaceROI = self.getROI(self.trackedFace, img)
+		self.trackedFaceTemplate = self.scaleRect(self.trackedFace, img, 0.5)
+		self.trackedFaceROI = self.scaleRect(self.trackedFace, img, 1.5)
 		
 	def detectTemplateMatching(self, img):
 		self.templateMatchingCurrentTime = cv2.getTickCount()
@@ -112,17 +102,15 @@ class FaceDetector():
 
 
 		minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(match)
-		
-		self.trackedFace = self.doubleFace((
+		foundTemplate = (
 			minLoc[0] + self.trackedFaceROI[0], 
 			minLoc[1] + self.trackedFaceROI[1], 
 			self.trackedFaceTemplate[2], 
-			self.trackedFaceTemplate[3]),
-			img)
-		
+			self.trackedFaceTemplate[3])
 
-		self.trackedFaceTemplate = self.getFaceTemplate(self.trackedFace, img)
-		self.trackedFaceROI = self.doubleFace(self.trackedFace, img)
+		self.trackedFaceTemplate = foundTemplate
+		self.trackedFace = self.scaleRect(self.trackedFaceTemplate, img, 2)
+		self.trackedFaceROI = self.scaleRect(self.trackedFace, img, 1.5)
 		
 	def resize(self, img):
 		original_height = img.shape[0]
