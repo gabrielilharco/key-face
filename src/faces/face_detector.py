@@ -50,18 +50,18 @@ class FaceDetector():
 
 	def detectCascade(self, img, roiOnly=False):
 		if roiOnly:
-			searchArea = self.getSubRect(img, self.trackedFaceROI) 
+			searchArea = self.getSubRect(img, self.trackedFaceROI)
 		else:
 			searchArea = img
-		
+
 		width = searchArea.shape[0]
-		faces = self.faceCascade.detectMultiScale(searchArea, 
+		faces = self.faceCascade.detectMultiScale(searchArea,
 			scaleFactor = settings.cascadeScaleFactor,
 			minNeighbors = settings.cascadeMinNeighbors,
-			minSize = (int(width*settings.minimumFaceSize), int(width*settings.minimumFaceSize)), 
-			maxSize = (int(width*settings.maximumFaceSize), int(width*settings.maximumFaceSize))) 
+			minSize = (int(width*settings.minimumFaceSize), int(width*settings.minimumFaceSize)),
+			maxSize = (int(width*settings.maximumFaceSize), int(width*settings.maximumFaceSize)))
 
-		if len(faces) == 0: 
+		if len(faces) == 0:
 			if roiOnly and not self.isTemplateMatchingRunning:
 				self.isTemplateMatchingRunning = True
 				self.templateMatchingStartTime = cv2.getTickCount()
@@ -71,7 +71,7 @@ class FaceDetector():
 			return
 
 		self.foundFace=True
-		# track only the largest face 
+		# track only the largest face
 		self.trackedFace = self.largestFace(faces)
 		# adjust face position if necessary
 		if roiOnly:
@@ -79,7 +79,7 @@ class FaceDetector():
 			self.trackedFace[1] += self.trackedFaceROI[1]
 		self.trackedFaceTemplate = self.scaleRect(self.trackedFace, img, 0.5)
 		self.trackedFaceROI = self.scaleRect(self.trackedFace, img, 1.5)
-		
+
 	def detectTemplateMatching(self, img):
 		self.templateMatchingCurrentTime = cv2.getTickCount()
 		duration = (self.templateMatchingCurrentTime - self.templateMatchingStartTime)/cv2.getTickFrequency()
@@ -88,7 +88,7 @@ class FaceDetector():
 			self.isTemplateMatchingRunning = False
 			return
 
-		faceTemplate = self.getSubRect(img, self.trackedFaceTemplate) 
+		faceTemplate = self.getSubRect(img, self.trackedFaceTemplate)
 		roi = self.getSubRect(img, self.trackedFaceROI)
 		match = cv2.matchTemplate(roi, faceTemplate, cv2.TM_SQDIFF_NORMED)
 		cv2.normalize(match, match, 0, 1, cv2.NORM_MINMAX, -1)
@@ -96,15 +96,15 @@ class FaceDetector():
 
 		minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(match)
 		foundTemplate = (
-			minLoc[0] + self.trackedFaceROI[0], 
-			minLoc[1] + self.trackedFaceROI[1], 
-			self.trackedFaceTemplate[2], 
+			minLoc[0] + self.trackedFaceROI[0],
+			minLoc[1] + self.trackedFaceROI[1],
+			self.trackedFaceTemplate[2],
 			self.trackedFaceTemplate[3])
 
 		self.trackedFaceTemplate = foundTemplate
 		self.trackedFace = self.scaleRect(self.trackedFaceTemplate, img, 2)
 		self.trackedFaceROI = self.scaleRect(self.trackedFace, img, 1.5)
-		
+
 	def resize(self, img):
 		original_height = img.shape[0]
 		original_width = img.shape[1]
@@ -126,11 +126,18 @@ class FaceDetector():
 			if self.isTemplateMatchingRunning:
 				self.detectTemplateMatching(gray_img) # detect using template matching
 		if self.foundFace:
-			cv2.rectangle(img, 
-				(self.trackedFace[0], self.trackedFace[1]), 
-				(self.trackedFace[0]+self.trackedFace[2], self.trackedFace[1]+self.trackedFace[3]), 
+			cv2.rectangle(img,
+				(self.trackedFace[0], self.trackedFace[1]),
+				(self.trackedFace[0]+self.trackedFace[2], self.trackedFace[1]+self.trackedFace[3]),
 				(0,255,0), 3)
+		#Local copy
+		self.img = img
+
 		cv2.imshow('img', img)
+
+	def getFaceImage(self):
+		return self.getSubRect(self.img, self.trackedFace)
+
 
 
 
