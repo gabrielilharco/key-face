@@ -80,7 +80,7 @@ class FaceDetector():
 			self.trackedFace[0] += self.trackedFaceROI[0]
 			self.trackedFace[1] += self.trackedFaceROI[1]
 		self.trackedFaceTemplate = self.scaleRect(self.trackedFace, img, 0.5)
-		self.trackedFaceROI = self.scaleRect(self.trackedFace, img, 1.5)
+		self.trackedFaceROI = self.scaleRect(self.trackedFace, img, 2)
 
 	def detectTemplateMatching(self, img):
 		self.templateMatchingCurrentTime = cv2.getTickCount()
@@ -105,7 +105,7 @@ class FaceDetector():
 
 		self.trackedFaceTemplate = foundTemplate
 		self.trackedFace = self.scaleRect(self.trackedFaceTemplate, img, 2)
-		self.trackedFaceROI = self.scaleRect(self.trackedFace, img, 1.5)
+		self.trackedFaceROI = self.scaleRect(self.trackedFace, img, 2)
 
 	def resize(self, img):
 		original_height = img.shape[0]
