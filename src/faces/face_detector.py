@@ -5,6 +5,7 @@ class FaceDetector():
 	def __init__(self, haarCascadeFilePath, videoCapture):
 		try:
 			self.faceCascade = cv2.CascadeClassifier(haarCascadeFilePath)
+			print self.faceCascade
 		except:
 			raise Exception("Error creating haar cascade classifier. Are you sure file " + haarCascadeFilePath + " exists?")
 		self.videoCapture = videoCapture
@@ -14,6 +15,7 @@ class FaceDetector():
 		self.templateMatchingStartTime = cv2.getTickCount()
 		self.templateMatchingCurrentTime = cv2.getTickCount()
 		self.isTemplateMatchingRunning = False
+		self.img = None
 
 	def limit(self, val, inf, sup):
 		return max(inf,min(val,sup))
@@ -132,11 +134,15 @@ class FaceDetector():
 				(0,255,0), 3)
 		#Local copy
 		self.img = img
+		self.gray_img = gray_img
 
 		cv2.imshow('img', img)
 
 	def getFaceImage(self):
 		return self.getSubRect(self.img, self.trackedFace)
+
+	def getGrayFaceImage(self):
+		return self.getSubRect(self.gray_img, self.trackedFace)
 
 
 
