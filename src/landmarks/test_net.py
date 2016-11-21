@@ -120,60 +120,46 @@ class AdjustVariable(object):
 #####################
 
 
-X, y = load2d()  # load 2-d data
-print X.shape
+#X, y = load2d()  # load 2-d data
 #net5.fit(X, y)
 
 import cPickle as pickle
 
-model = pickle.load(open("landmarks/models/net5.pickle", 'rb'))
-
-#model = pickle.load(open(PICKLE_MODELS_PATH + "/net5.pickle"))
-
-class LandmarkPredictor(object):
-
-    def __init__(self):
-        self.model = model
-
-    def predict(self, img):
-        resized_img = cv2.resize(img, Size(96, 96))
-
-        X = resized_img.reshape(-1, 1, 96, 96)
-
-        y = self.model.predict(X)[0]
-
-
-# import matplotlib.pyplot as pyplot
-
-# train_loss = np.array([i["train_loss"] for i in net5.train_history_])
-# valid_loss = np.array([i["valid_loss"] for i in net5.train_history_])
-# pyplot.plot(train_loss[:750], linewidth=3, label="train")
-# pyplot.plot(valid_loss[:750], linewidth=3, label="valid")
-# pyplot.grid()
-# pyplot.legend()
-# pyplot.xlabel("epoch")
-# pyplot.ylabel("loss")
-# pyplot.ylim(1e-3, 1e-2)
-# pyplot.yscale("log")
-# pyplot.show()
-# #pyplot.savefig("training.png")
+net5 = pickle.load(open("models/net5.pickle", 'rb'))
 
 
 
-# def plot_sample(x, y, axis):
-#     img = x.reshape(96, 96)
-#     axis.imshow(img, cmap='gray')
-#     axis.scatter(y[0::2] * 48 + 48, y[1::2] * 48 + 48, marker='x', s=10)
+import matplotlib.pyplot as pyplot
 
-# X, _ = load2d(test=True)
-# y_pred = net5.predict(X)
+train_loss = np.array([i["train_loss"] for i in net5.train_history_])
+valid_loss = np.array([i["valid_loss"] for i in net5.train_history_])
+pyplot.plot(train_loss[:750], linewidth=3, label="train")
+pyplot.plot(valid_loss[:750], linewidth=3, label="valid")
+pyplot.grid()
+pyplot.legend()
+pyplot.xlabel("epoch")
+pyplot.ylabel("loss")
+pyplot.ylim(1e-3, 1e-2)
+pyplot.yscale("log")
+pyplot.show()
+#pyplot.savefig("training.png")
 
-# fig = pyplot.figure(figsize=(6, 6))
-# fig.subplots_adjust(
-#     left=0, right=1, bottom=0, top=1, hspace=0.05, wspace=0.05)
 
-# for i in range(16):
-#     ax = fig.add_subplot(4, 4, i + 1, xticks=[], yticks=[])
-#     plot_sample(X[60+i], y_pred[60+i], ax)
 
-# pyplot.show()
+def plot_sample(x, y, axis):
+    img = x.reshape(96, 96)
+    axis.imshow(img, cmap='gray')
+    axis.scatter(y[0::2] * 48 + 48, y[1::2] * 48 + 48, marker='x', s=10)
+
+X, _ = load2d(test=True)
+y_pred = net5.predict(X)
+
+fig = pyplot.figure(figsize=(6, 6))
+fig.subplots_adjust(
+    left=0, right=1, bottom=0, top=1, hspace=0.05, wspace=0.05)
+
+for i in range(16):
+    ax = fig.add_subplot(4, 4, i + 1, xticks=[], yticks=[])
+    plot_sample(X[60+i], y_pred[60+i], ax)
+
+pyplot.show()

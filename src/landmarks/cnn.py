@@ -175,9 +175,9 @@ net6 = NeuralNet(
 #####################
 
 
-X, y = load2d()  # load 2-d data
-net6.fit(X, y)
+# X, y = load2d()  # load 2-d data
+# net6.fit(X, y)
 
-import cPickle as pickle
-with open('net6.pickle', 'wb') as f:
-    pickle.dump(net6, f, -1)
+# import cPickle as pickle
+# with open('net6.pickle', 'wb') as f:
+#     pickle.dump(net6, f, -1)

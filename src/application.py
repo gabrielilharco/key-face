@@ -2,10 +2,12 @@ from faces.face_detector import FaceDetector
 # from landmarks.test_net import *
 import cv2
 import numpy as np
+import sys
+sys.setrecursionlimit(10000)
 
-##########################3
-##########################3
-##########################3
+##########################
+##########################
+##########################
 
 
 from nolearn.lasagne import BatchIterator
@@ -85,20 +87,16 @@ class LandmarkPredictor(object):
 
     def predict(self, img):
         resized_img = cv2.resize(img, (96, 96))
-        print ("SHAPEEEEEEEE ", resized_img.shape)
-        #X = resized_img.reshape(-1, 1, 96, 96)
-        X = np.array((np.array(resized_img)))
-        X = np.vstack(X) / 255.  # scale pixel values to [0, 1]
+        X = resized_img.reshape(1, 1, 96, 96)
+        X = X / 255.  # scale pixel values to [0, 1]
         X = X.astype(np.float32)
-
-        print X.shape
-        y = self.model.predict(X)[0]
+        y = self.model.predict(X)
         print y
 
 cap = cv2.VideoCapture(0)
 
 fd = FaceDetector("../model/faces/haarcascade_frontalface.xml", cap)
-#lp = LandmarkPredictor()
+lp = LandmarkPredictor()
 
 running = True
 while running:
@@ -106,7 +104,7 @@ while running:
 
 	if fd.foundFace:
 		faceImage = fd.getGrayFaceImage()
-		#lp.predict(faceImage)
+		lp.predict(faceImage)
 
 	key = cv2.waitKey(30) & 0xff
 	if key == 27:
