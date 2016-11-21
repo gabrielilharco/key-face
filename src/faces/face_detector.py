@@ -136,7 +136,7 @@ class FaceDetector():
 		self.img = img
 		self.gray_img = gray_img
 
-		cv2.imshow('img', img)
+		return img
 
 	def getFaceImage(self):
 		return self.getSubRect(self.img, self.trackedFace)

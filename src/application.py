@@ -91,7 +91,16 @@ class LandmarkPredictor(object):
         X = X / 255.  # scale pixel values to [0, 1]
         X = X.astype(np.float32)
         y = self.model.predict(X)
-        print y
+        return y
+        
+    def drawPoints(self, img, points):
+        points = np.transpose(points)
+        for i in range(0,len(points),2):
+            x,y = points[i], points[i+1]
+            print x, y
+            size = fd.trackedFace[2]/2
+            center = (int(x*size + size) + fd.trackedFace[0], int(y*size + size) + fd.trackedFace[1])
+            cv2.circle(img, center, 3, (255,0,0), -1)
 
 cap = cv2.VideoCapture(0)
 
@@ -100,15 +109,18 @@ lp = LandmarkPredictor()
 
 running = True
 while running:
-	fd.detectFace()
+    img = fd.detectFace()
 
-	if fd.foundFace:
-		faceImage = fd.getGrayFaceImage()
-		lp.predict(faceImage)
+    if fd.foundFace:
+        faceImage = fd.getGrayFaceImage()
+        points = lp.predict(faceImage)
+        lp.drawPoints(img, points)
 
-	key = cv2.waitKey(30) & 0xff
-	if key == 27:
-		running = False
+    cv2.imshow('img', img)
+
+    key = cv2.waitKey(30) & 0xff
+    if key == 27:
+        running = False
 
 
 
