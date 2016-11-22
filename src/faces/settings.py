@@ -1,3 +1,4 @@
+#Config file for Face Detector
 
 cascadeScaleFactor = 1.1
 cascadeMinNeighbors = 7

@@ -120,8 +120,8 @@ class AdjustVariable(object):
 #####################
 
 
-#X, y = load2d()  # load 2-d data
-#net5.fit(X, y)
+X, y = load2d()  # load 2-d data
+net5.fit(X, y)
 
 import cPickle as pickle
 
